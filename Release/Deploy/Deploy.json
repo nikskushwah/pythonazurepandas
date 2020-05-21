@@ -1,0 +1,153 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.1",
+    "parameters": {
+        "base": {
+            "type": "string",
+            "defaultValue": "planb"
+        },
+        "env": {
+            "type": "string",
+            "maxLength": 4,
+            "defaultValue": "dev"
+        }
+    },
+    "variables": {
+        "applicationInsightsName": "[concat('appi-',parameters('base'),'-',parameters('env'))]",
+        "servicePlan": "[concat('plan-',parameters('base'),'-',parameters('env'))]",
+        "resourecGroup": "[concat('rg-',parameters('base'),'-',parameters('env'))]",
+        "webapp": "[concat('wa-',parameters('base'),'-',parameters('env'))]",
+        "tags": {
+            "Customer": "PlanB"
+        }
+    },
+    "resources": [
+        {
+            "name": "[variables('applicationInsightsName')]",
+            "type": "microsoft.insights/components",
+            "apiVersion": "2015-05-01",
+            "location": "[resourceGroup().location]",
+            "tags": "[variables('tags')]",
+            "properties": {
+                "ApplicationId": "[variables('applicationInsightsName')]",
+                "Application_Type": "Web",
+                "Flow_Type": "Redfield",
+                "Request_Source": "[parameters('base')]"
+            }
+        },
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[variables('servicePlan')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "kind": "linux",
+            "tags": "[variables('tags')]",
+           "properties": {
+                "perSiteScaling": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "freeOfferExpirationTime": "2020-06-18T08:27:00",
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            },
+            "sku": {
+                "name": "B1",
+                "tier": "Basic",
+                "size": "B1",
+                "family": "B",
+                "capacity": 1
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-02-01",
+            "name": "[variables('webapp')]",
+            "tags": "[variables('tags')]",
+            "location": "[resourceGroup().location]",
+            "kind": "app,linux",
+            "properties": {
+                "name": "[variables('webapp')]",
+                "siteConfig": {
+                    
+                },
+                "serverFarmId": "[concat(subscription().id,'/resourcegroups/',variables('resourecGroup'),'/providers/Microsoft.Web/serverfarms/',variables('servicePlan'))]",
+                "hostingEnvironment": "",
+                "clientAffinityEnabled": false,
+                "dependsOn": [
+                    "[resourceId('Microsoft.Web/serverfarms', variables('servicePlan'))]",
+                    "[resourceId('microsoft.insights/components', variables('applicationInsightsName'))]"
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(variables('webapp'), '/web')]",
+             "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', variables('webapp'))]",
+                "[resourceId('Microsoft.Web/serverfarms', variables('servicePlan'))]",
+                "[resourceId('microsoft.insights/components', variables('applicationInsightsName'))]"
+            ],
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "linuxFxVersion": "PYTHON|3.8",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "httpLoggingEnabled": true,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "use32BitWorkerProcess": false,
+                "webSocketsEnabled": false,
+                "alwaysOn": false,
+                "appCommandLine": "",
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": false
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "ftpsState": "AllAllowed",
+                "reservedInstanceCount": 0
+            }
+        }
+    ],
+    "outputs": {
+    }
+}

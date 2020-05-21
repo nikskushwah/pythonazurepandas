@@ -1,0 +1,1 @@
+ az deployment group create --name TestDeploy --subscription 9b6c07d4-c41b-488c-8954-a36359d9d982 --resource-group rg-planb-dev --template-file .\Deploy\Deploy.json --mode Complete --debug
