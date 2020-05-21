@@ -10,10 +10,10 @@ variables:
   # Azure Resource Manager connection created during pipeline creation
   azureServiceConnectionId: 'removed'
   subscriptionId: 'removed'
-  resourceGroupName: 'rg-planb-dev'
-  location: 'southafricanorth'
+  resourceGroupName: 'v_nikushRG'
+  location: 'Central US'
   # Web app name
-  webAppName: 'wa-planb-dev'
+  webAppName: 'testpythonpipeline'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
